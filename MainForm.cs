@@ -51,6 +51,8 @@ namespace CodedDataGrouper
 
         private void AnalyzeData(string filePath)
         {
+            _events = new EventList();
+
             Logger.Log($"Analyzing file \"{filePath}\"");
 
             //open excel

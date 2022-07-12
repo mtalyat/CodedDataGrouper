@@ -103,6 +103,9 @@ namespace CodedDataGrouper
 
         public void SetGroupIDs(Dictionary<string, int> groupIDs)
         {
+            //clear old group IDs
+            _superGroupIDs.Clear();
+
             //for each group ID number, we want to keep track of what super group it is in
             foreach(var pair in groupIDs)
             {
