@@ -6,6 +6,7 @@ using BPAD;
 using System.Text;
 using System.Diagnostics;
 using Newtonsoft.Json;
+using System.Linq;
 
 namespace CodedDataGrouper
 {
@@ -57,6 +58,7 @@ namespace CodedDataGrouper
 
             //open excel
             Microsoft.Office.Interop.Excel.Application application = new Microsoft.Office.Interop.Excel.Application();
+            application.DisplayAlerts = false;
 
             //get the workbooks
             Workbooks workbooks = application.Workbooks;
@@ -65,7 +67,16 @@ namespace CodedDataGrouper
             Workbook workbook = workbooks.Open(filePath);
 
             //open the sheet we want to use (index starts at 1)
-            Worksheet worksheet = (Worksheet)workbook.Worksheets[1];
+            Worksheet worksheet;
+            try
+            {
+                worksheet = (Worksheet)workbook.Worksheets[Data.EventsSheetName];
+            }
+            catch
+            {
+                Logger.Log($"Could not find worksheet \"{Data.EventsSheetName}\".");
+                return;
+            }
 
             //get the range of cells that this worksheet contains
             Microsoft.Office.Interop.Excel.Range rangeAll = worksheet.UsedRange;
@@ -121,6 +132,7 @@ namespace CodedDataGrouper
 
                 //show application
                 application.Visible = true;
+                application.DisplayAlerts = true;
             }
             else
             {
@@ -346,6 +358,11 @@ namespace CodedDataGrouper
             Process.Start(startInfo);
         }
 
+        private void EventsSheetNameTextBox_TextChanged(object sender, EventArgs e)
+        {
+            Data.EventsSheetName = EventsSheetNameTextBox.Text;
+        }
+
         #endregion
 
         #region Configuration Data/Settings
@@ -355,6 +372,13 @@ namespace CodedDataGrouper
             _columnNames = Data.ToStringArray();
 
             //make sure the data is valid
+
+            if (string.IsNullOrWhiteSpace(Data.EventsSheetName))
+            {
+                MessageBox.Show(this, "The events sheet name cannot be empty!", "Invalid data", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+
             if (string.IsNullOrWhiteSpace(Data.ColumnGroup))
             {
                 MessageBox.Show(this, "The group column name cannot be empty!", "Invalid data", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -377,6 +401,7 @@ namespace CodedDataGrouper
 
         internal void UpdateConfigurationData()
         {
+            EventsSheetNameTextBox.Text = Data.EventsSheetName;
             IDColumnTextBox.Text = Data.ColumnID;
             GroupColumnTextBox.Text = Data.ColumnGroup;
             GlobalThresholdUpDown.Value = (decimal)Data.GlobalThreshold;
@@ -750,10 +775,33 @@ namespace CodedDataGrouper
         private Worksheet CreateSheet(Workbook workbook, string name)
         {
             Sheets? sheets = workbook.Sheets;
-            Worksheet sheet = (Worksheet)sheets.Add(sheets[1], Type.Missing, Type.Missing, Type.Missing);
+
+            //create the sheet
+            Worksheet sheet = (Worksheet)sheets.Add(Type.Missing, sheets[sheets.Count], Type.Missing, Type.Missing);
             NameSheet(sheet, name);
+
+            //clean up
             Marshal.ReleaseComObject(sheets);
+
             return sheet;
+        }
+
+        private Worksheet GetSheet(Workbook workbook, string name)
+        {
+            Worksheet worksheet;
+
+            try
+            {
+                worksheet = (Worksheet)workbook.Worksheets[Data.EventsSheetName];
+            }
+            catch
+            {
+                //if could not find the sheet with the name, then create one
+                worksheet = CreateSheet(workbook, name);
+            }
+
+
+            return worksheet;
         }
 
         private void CreateSheetWithEvents(Workbook workbook, EventList events, Microsoft.Office.Interop.Excel.Range?[] columns)
@@ -925,13 +973,23 @@ namespace CodedDataGrouper
 
             Microsoft.Office.Interop.Excel.Range cell;
 
+            int row = 1;
+
+            //print overall IRR
+            cell = sheet.Cells[row, 1];
+            cell.Value = "All observers:";
+            cell = sheet.Cells[row, 2];
+            cell.Value = irrMethod(events, Enumerable.Range(0, events.ObvserverCount).ToArray());
+
+            row += 2;
+
             //print names first
             for (int i = 0; i < observerCount; i++)
             {
-                cell = sheet.Cells[1, i + 2];
+                cell = sheet.Cells[row, i + 2];
                 cell.Value = observerIDs[i];
                 cell.Font.Bold = true;
-                cell = sheet.Cells[i + 2, 1];
+                cell = sheet.Cells[i + row + 1, 1];
                 cell.Value = observerIDs[i];
                 cell.Font.Bold = true;
             }
@@ -944,7 +1002,7 @@ namespace CodedDataGrouper
                     //if in the diagonal, it is always one
                     if (r == c)
                     {
-                        cell = sheet.Cells[r + 2, c + 2];
+                        cell = sheet.Cells[r + row + 1, c + 2];
                         cell.Value = 1.0;
                     }
                     else
@@ -952,9 +1010,9 @@ namespace CodedDataGrouper
                         //otherwise, do IRR and set for both sides of the matrix
                         double irr = irrMethod(events, r, c);
 
-                        cell = sheet.Cells[r + 2, c + 2];
+                        cell = sheet.Cells[r + row + 1, c + 2];
                         cell.Value = irr;
-                        cell = sheet.Cells[c + 2, r + 2];
+                        cell = sheet.Cells[c + row + 1, r + 2];
                         cell.Value = irr;
                     }
                 }

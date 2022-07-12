@@ -14,6 +14,7 @@ namespace CodedDataGrouper
     [Serializable]
     internal class ConfigurationData
     {
+        public string EventsSheetName { get; set; } = "";
         public string ColumnID { get; set; } = "";
         public string ColumnGroup { get; set; } = "";
         public string ColumnCategory { get; set; } = "";

@@ -34,6 +34,8 @@
             this.OutputProgressBar = new System.Windows.Forms.ProgressBar();
             this.OutputTextboxLabel = new System.Windows.Forms.Label();
             this.ConfigurationGroupBox = new System.Windows.Forms.GroupBox();
+            this.EventsSheetNameTextBox = new System.Windows.Forms.TextBox();
+            this.label13 = new System.Windows.Forms.Label();
             this.InterRaterReliabilityComboBox = new System.Windows.Forms.ComboBox();
             this.label12 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
@@ -86,7 +88,7 @@
             this.OutputTextbox.Location = new System.Drawing.Point(443, 397);
             this.OutputTextbox.Name = "OutputTextbox";
             this.OutputTextbox.ReadOnly = true;
-            this.OutputTextbox.Size = new System.Drawing.Size(788, 142);
+            this.OutputTextbox.Size = new System.Drawing.Size(788, 224);
             this.OutputTextbox.TabIndex = 1;
             this.OutputTextbox.Text = "";
             // 
@@ -113,6 +115,8 @@
             // 
             this.ConfigurationGroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
+            this.ConfigurationGroupBox.Controls.Add(this.EventsSheetNameTextBox);
+            this.ConfigurationGroupBox.Controls.Add(this.label13);
             this.ConfigurationGroupBox.Controls.Add(this.InterRaterReliabilityComboBox);
             this.ConfigurationGroupBox.Controls.Add(this.label12);
             this.ConfigurationGroupBox.Controls.Add(this.label11);
@@ -138,10 +142,30 @@
             this.ConfigurationGroupBox.Controls.Add(this.label1);
             this.ConfigurationGroupBox.Location = new System.Drawing.Point(12, 70);
             this.ConfigurationGroupBox.Name = "ConfigurationGroupBox";
-            this.ConfigurationGroupBox.Size = new System.Drawing.Size(425, 469);
+            this.ConfigurationGroupBox.Size = new System.Drawing.Size(425, 551);
             this.ConfigurationGroupBox.TabIndex = 5;
             this.ConfigurationGroupBox.TabStop = false;
             this.ConfigurationGroupBox.Text = "Configuration";
+            // 
+            // EventsSheetNameTextBox
+            // 
+            this.EventsSheetNameTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.EventsSheetNameTextBox.Location = new System.Drawing.Point(167, 22);
+            this.EventsSheetNameTextBox.Name = "EventsSheetNameTextBox";
+            this.EventsSheetNameTextBox.Size = new System.Drawing.Size(246, 23);
+            this.EventsSheetNameTextBox.TabIndex = 30;
+            this.EventsSheetNameTextBox.TextChanged += new System.EventHandler(this.EventsSheetNameTextBox_TextChanged);
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(7, 22);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(111, 15);
+            this.label13.TabIndex = 29;
+            this.label13.Text = "Events Sheet Name:";
+            this.toolTip1.SetToolTip(this.label13, "The name of the column that has the ID of the rater.");
             // 
             // InterRaterReliabilityComboBox
             // 
@@ -152,7 +176,7 @@
             "None",
             "Krippendorf\'s Alpha",
             "Percentage"});
-            this.InterRaterReliabilityComboBox.Location = new System.Drawing.Point(167, 392);
+            this.InterRaterReliabilityComboBox.Location = new System.Drawing.Point(167, 424);
             this.InterRaterReliabilityComboBox.Name = "InterRaterReliabilityComboBox";
             this.InterRaterReliabilityComboBox.Size = new System.Drawing.Size(246, 23);
             this.InterRaterReliabilityComboBox.TabIndex = 28;
@@ -161,7 +185,7 @@
             // label12
             // 
             this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(6, 395);
+            this.label12.Location = new System.Drawing.Point(6, 427);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(115, 15);
             this.label12.TabIndex = 27;
@@ -172,7 +196,7 @@
             // label11
             // 
             this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(7, 371);
+            this.label11.Location = new System.Drawing.Point(7, 403);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(109, 15);
             this.label11.TabIndex = 26;
@@ -183,7 +207,7 @@
             // SearchForPatternsCheckBox
             // 
             this.SearchForPatternsCheckBox.AutoSize = true;
-            this.SearchForPatternsCheckBox.Location = new System.Drawing.Point(167, 372);
+            this.SearchForPatternsCheckBox.Location = new System.Drawing.Point(167, 404);
             this.SearchForPatternsCheckBox.Name = "SearchForPatternsCheckBox";
             this.SearchForPatternsCheckBox.Size = new System.Drawing.Size(15, 14);
             this.SearchForPatternsCheckBox.TabIndex = 25;
@@ -193,7 +217,7 @@
             // GenerateExcelSheetCheckBox
             // 
             this.GenerateExcelSheetCheckBox.AutoSize = true;
-            this.GenerateExcelSheetCheckBox.Location = new System.Drawing.Point(167, 352);
+            this.GenerateExcelSheetCheckBox.Location = new System.Drawing.Point(167, 384);
             this.GenerateExcelSheetCheckBox.Name = "GenerateExcelSheetCheckBox";
             this.GenerateExcelSheetCheckBox.Size = new System.Drawing.Size(15, 14);
             this.GenerateExcelSheetCheckBox.TabIndex = 24;
@@ -203,7 +227,7 @@
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(6, 353);
+            this.label10.Location = new System.Drawing.Point(6, 385);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(119, 15);
             this.label10.TabIndex = 23;
@@ -215,7 +239,7 @@
             // 
             this.EditSuperGroupsButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.EditSuperGroupsButton.Location = new System.Drawing.Point(167, 323);
+            this.EditSuperGroupsButton.Location = new System.Drawing.Point(167, 355);
             this.EditSuperGroupsButton.Name = "EditSuperGroupsButton";
             this.EditSuperGroupsButton.Size = new System.Drawing.Size(246, 23);
             this.EditSuperGroupsButton.TabIndex = 22;
@@ -227,7 +251,7 @@
             // label9
             // 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(6, 327);
+            this.label9.Location = new System.Drawing.Point(6, 359);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(81, 15);
             this.label9.TabIndex = 21;
@@ -239,7 +263,7 @@
             // 
             this.label8.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(7, 428);
+            this.label8.Location = new System.Drawing.Point(7, 510);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(93, 15);
             this.label8.TabIndex = 20;
@@ -250,7 +274,7 @@
             this.GlobalThresholdUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.GlobalThresholdUpDown.DecimalPlaces = 2;
-            this.GlobalThresholdUpDown.Location = new System.Drawing.Point(167, 77);
+            this.GlobalThresholdUpDown.Location = new System.Drawing.Point(167, 109);
             this.GlobalThresholdUpDown.Maximum = new decimal(new int[] {
             1000000,
             0,
@@ -264,7 +288,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(7, 79);
+            this.label5.Location = new System.Drawing.Point(7, 111);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(156, 15);
             this.label5.TabIndex = 18;
@@ -275,7 +299,7 @@
             // 
             this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(7, 447);
+            this.label4.Location = new System.Drawing.Point(7, 529);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(310, 15);
             this.label4.TabIndex = 17;
@@ -285,7 +309,7 @@
             // 
             this.CategoriesRichTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.CategoriesRichTextBox.Location = new System.Drawing.Point(167, 139);
+            this.CategoriesRichTextBox.Location = new System.Drawing.Point(167, 171);
             this.CategoriesRichTextBox.Name = "CategoriesRichTextBox";
             this.CategoriesRichTextBox.ReadOnly = true;
             this.CategoriesRichTextBox.Size = new System.Drawing.Size(246, 61);
@@ -296,7 +320,7 @@
             // 
             this.EditCategoriesButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.EditCategoriesButton.Location = new System.Drawing.Point(167, 206);
+            this.EditCategoriesButton.Location = new System.Drawing.Point(167, 238);
             this.EditCategoriesButton.Name = "EditCategoriesButton";
             this.EditCategoriesButton.Size = new System.Drawing.Size(246, 23);
             this.EditCategoriesButton.TabIndex = 15;
@@ -308,7 +332,7 @@
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(6, 139);
+            this.label7.Location = new System.Drawing.Point(6, 171);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(34, 15);
             this.label7.TabIndex = 14;
@@ -319,7 +343,7 @@
             // 
             this.CategoryColumnTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.CategoryColumnTextBox.Location = new System.Drawing.Point(167, 106);
+            this.CategoryColumnTextBox.Location = new System.Drawing.Point(167, 138);
             this.CategoryColumnTextBox.Name = "CategoryColumnTextBox";
             this.CategoryColumnTextBox.Size = new System.Drawing.Size(246, 23);
             this.CategoryColumnTextBox.TabIndex = 12;
@@ -328,7 +352,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(7, 109);
+            this.label6.Location = new System.Drawing.Point(7, 141);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(80, 15);
             this.label6.TabIndex = 11;
@@ -340,7 +364,7 @@
             // 
             this.TimeColumnsRichTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.TimeColumnsRichTextBox.Location = new System.Drawing.Point(167, 235);
+            this.TimeColumnsRichTextBox.Location = new System.Drawing.Point(167, 267);
             this.TimeColumnsRichTextBox.Name = "TimeColumnsRichTextBox";
             this.TimeColumnsRichTextBox.Size = new System.Drawing.Size(246, 82);
             this.TimeColumnsRichTextBox.TabIndex = 8;
@@ -350,7 +374,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(7, 238);
+            this.label3.Location = new System.Drawing.Point(7, 270);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(100, 15);
             this.label3.TabIndex = 5;
@@ -362,7 +386,7 @@
             // 
             this.GroupColumnTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.GroupColumnTextBox.Location = new System.Drawing.Point(167, 48);
+            this.GroupColumnTextBox.Location = new System.Drawing.Point(167, 80);
             this.GroupColumnTextBox.Name = "GroupColumnTextBox";
             this.GroupColumnTextBox.Size = new System.Drawing.Size(246, 23);
             this.GroupColumnTextBox.TabIndex = 3;
@@ -372,7 +396,7 @@
             // 
             this.IDColumnTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.IDColumnTextBox.Location = new System.Drawing.Point(167, 19);
+            this.IDColumnTextBox.Location = new System.Drawing.Point(167, 51);
             this.IDColumnTextBox.Name = "IDColumnTextBox";
             this.IDColumnTextBox.Size = new System.Drawing.Size(246, 23);
             this.IDColumnTextBox.TabIndex = 1;
@@ -381,7 +405,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(6, 51);
+            this.label2.Location = new System.Drawing.Point(6, 83);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(107, 15);
             this.label2.TabIndex = 1;
@@ -391,7 +415,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(7, 19);
+            this.label1.Location = new System.Drawing.Point(7, 51);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(67, 15);
             this.label1.TabIndex = 0;
@@ -439,7 +463,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1243, 551);
+            this.ClientSize = new System.Drawing.Size(1243, 633);
             this.Controls.Add(this.OpenSettingsFileLocationLinkLabel);
             this.Controls.Add(this.BpadGroupBox);
             this.Controls.Add(this.ConfigurationGroupBox);
@@ -495,5 +519,7 @@
         private Label label11;
         private CheckBox SearchForPatternsCheckBox;
         private LinkLabel OpenSettingsFileLocationLinkLabel;
+        private TextBox EventsSheetNameTextBox;
+        private Label label13;
     }
 }
