@@ -340,6 +340,8 @@ namespace CodedDataGrouper
         private void SearchForPatternsCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             Data.SearchForPatterns = SearchForPatternsCheckBox.Checked;
+
+            BpadGroupBox.Enabled = Data.SearchForPatterns;
         }
 
         private void InterRaterReliabilityComboBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -412,6 +414,7 @@ namespace CodedDataGrouper
             CategoryColumnTextBox.Text = Data.ColumnCategory;
             CategoriesRichTextBox.Lines = Data.Categories.Select(c => c.ToString()).ToArray();
             TimeColumnsRichTextBox.Lines = Data.ColumnsTime.ToArray();
+            BpadGroupBox.Enabled = Data.SearchForPatterns;
             BpadPatternsTextBox.Lines = Data.Patterns.ToArray();
 
             CheckCategoryColumn();
