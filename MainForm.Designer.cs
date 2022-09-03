@@ -176,7 +176,7 @@
             "None",
             "Krippendorf\'s Alpha",
             "Percentage"});
-            this.InterRaterReliabilityComboBox.Location = new System.Drawing.Point(167, 424);
+            this.InterRaterReliabilityComboBox.Location = new System.Drawing.Point(167, 421);
             this.InterRaterReliabilityComboBox.Name = "InterRaterReliabilityComboBox";
             this.InterRaterReliabilityComboBox.Size = new System.Drawing.Size(246, 23);
             this.InterRaterReliabilityComboBox.TabIndex = 28;
@@ -185,7 +185,7 @@
             // label12
             // 
             this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(6, 427);
+            this.label12.Location = new System.Drawing.Point(6, 424);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(115, 15);
             this.label12.TabIndex = 27;
@@ -196,7 +196,7 @@
             // label11
             // 
             this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(7, 403);
+            this.label11.Location = new System.Drawing.Point(7, 400);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(109, 15);
             this.label11.TabIndex = 26;
@@ -207,7 +207,7 @@
             // SearchForPatternsCheckBox
             // 
             this.SearchForPatternsCheckBox.AutoSize = true;
-            this.SearchForPatternsCheckBox.Location = new System.Drawing.Point(167, 404);
+            this.SearchForPatternsCheckBox.Location = new System.Drawing.Point(167, 401);
             this.SearchForPatternsCheckBox.Name = "SearchForPatternsCheckBox";
             this.SearchForPatternsCheckBox.Size = new System.Drawing.Size(15, 14);
             this.SearchForPatternsCheckBox.TabIndex = 25;

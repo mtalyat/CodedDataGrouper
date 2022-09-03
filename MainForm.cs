@@ -18,11 +18,14 @@ namespace CodedDataGrouper
 
         public enum Columns : int
         {
+            GroupID,
             ID,
             Group,
             Category,
             Times
         }
+
+        private const string IRR_NUMBER_FORMAT = "0.000";
 
         private int columnCount => _columnNames.Length;
         private string[] _columnNames = new string[0];
@@ -30,6 +33,8 @@ namespace CodedDataGrouper
         private string directoryPath => System.Windows.Forms.Application.CommonAppDataPath;
 
         private string filePath => directoryPath + @"\settings.txt";
+
+        private string lastAnalyzedFilePath = "";
 
         #endregion
 
@@ -50,8 +55,16 @@ namespace CodedDataGrouper
             _events = new EventList();
         }
 
-        private void AnalyzeData(string filePath)
+        private void AnalyzeData(string filePath, string existingSheet = "")
         {
+            if(string.IsNullOrEmpty(filePath))
+            {
+                Logger.Log("Could not analyzed, no file selected.");
+                return;
+            }
+
+            lastAnalyzedFilePath = filePath;
+
             _events = new EventList();
 
             Logger.Log($"Analyzing file \"{filePath}\"");
@@ -68,13 +81,16 @@ namespace CodedDataGrouper
 
             //open the sheet we want to use (index starts at 1)
             Worksheet worksheet;
+           
+            string sheetName = string.IsNullOrEmpty(existingSheet) ? Data.EventsSheetName : existingSheet;
+
             try
             {
-                worksheet = (Worksheet)workbook.Worksheets[Data.EventsSheetName];
+                worksheet = (Worksheet)workbook.Worksheets[sheetName];
             }
             catch
             {
-                Logger.Log($"Could not find worksheet \"{Data.EventsSheetName}\".");
+                Logger.Log($"Could not find worksheet \"{sheetName}\".");
                 return;
             }
 
@@ -635,6 +651,7 @@ namespace CodedDataGrouper
             Dictionary<string, int> categoryIDs = new Dictionary<string, int>();
 
             RowData rd;
+            Microsoft.Office.Interop.Excel.Range? groupIDCell;
             Microsoft.Office.Interop.Excel.Range? observationIdCell;
             Microsoft.Office.Interop.Excel.Range? behaviorCell;
             Microsoft.Office.Interop.Excel.Range? behaviorTypeCell;
@@ -645,6 +662,7 @@ namespace CodedDataGrouper
             for (int i = 2; i <= rangeHeight; i++)
             {
                 //get the cells we use multiple times
+                groupIDCell = columns[Columns.GroupID.Index()]?.Cells[i];
                 observationIdCell = columns[Columns.ID.Index()]?.Cells[i];
                 behaviorCell = columns[Columns.Group.Index()]?.Cells[i];
                 behaviorTypeCell = columns[Columns.Category.Index()]?.Cells[i];
@@ -653,6 +671,7 @@ namespace CodedDataGrouper
                 {
                     rd = new RowData
                     {
+                        GroupIDID = (int)(groupIDCell?.Value ?? -1),
                         ID = observationIdCell?.Value.ToString() ?? "",
                         IDID = GetID(IDIDs, observationIdCell?.Value.ToString() ?? "-1"),
                         Group = behaviorCell?.Value.ToString() ?? "",
@@ -833,6 +852,11 @@ namespace CodedDataGrouper
                 ShowProgress(i + 1);
             }
 
+            //group ID
+            cell = sheet.Cells[1, 1];
+            cell.Value = "Group ID";
+            cell.Font.Bold = true;
+
             //now print every column
 
             SetProgressTotal(eventsList.Count);
@@ -843,13 +867,15 @@ namespace CodedDataGrouper
             Microsoft.Office.Interop.Excel.Range? tempRow;
             Microsoft.Office.Interop.Excel.Range? tempCell;
 
+            int groupID = 0;
+
             foreach (EventList.Event e in eventsList)
             {
                 for (int r = 0; r < e.RowDatas.Count; r++)
                 {
                     rd = e.RowDatas[r];
 
-                    tempRow = sheet.Range[sheet.Cells[row + r + 1, 1], sheet.Cells[row + r + 1, columnCount]];
+                    tempRow = sheet.Range[sheet.Cells[row + r + 1, 2], sheet.Cells[row + r + 1, columnCount + 1]];
 
                     //color row
                     tempRow.Interior.Color = GetColor(rd.IDID);
@@ -865,7 +891,14 @@ namespace CodedDataGrouper
                     for (int c = 0; c < columnCount; c++)
                     {
                         tempCell = sheet.Cells[row + r + 1, c + 1];
-                        tempCell.Value = rd[c];
+                        dynamic value = rd[c];
+
+                        if(c == (int)Columns.GroupID && value == "-1")
+                        {
+                            value = groupID;
+                        }
+
+                        tempCell.Value = value;
 
                         //set decimal places for all numbers
                         if (c >= (int)Columns.Times)
@@ -876,6 +909,8 @@ namespace CodedDataGrouper
                 }
 
                 row += e.RowDatas.Count;
+
+                groupID++;
 
                 progress++;
                 ShowProgress(progress);
@@ -983,6 +1018,7 @@ namespace CodedDataGrouper
             cell.Value = "All observers:";
             cell = sheet.Cells[row, 2];
             cell.Value = irrMethod(events, Enumerable.Range(0, events.ObvserverCount).ToArray());
+            cell.NumberFormat = IRR_NUMBER_FORMAT;
 
             row += 2;
 
@@ -1007,6 +1043,7 @@ namespace CodedDataGrouper
                     {
                         cell = sheet.Cells[r + row + 1, c + 2];
                         cell.Value = 1.0;
+                        cell.NumberFormat = IRR_NUMBER_FORMAT;
                     }
                     else
                     {
@@ -1015,8 +1052,10 @@ namespace CodedDataGrouper
 
                         cell = sheet.Cells[r + row + 1, c + 2];
                         cell.Value = irr;
+                        cell.NumberFormat = IRR_NUMBER_FORMAT;
                         cell = sheet.Cells[c + row + 1, r + 2];
                         cell.Value = irr;
+                        cell.NumberFormat = IRR_NUMBER_FORMAT;
                     }
                 }
             }

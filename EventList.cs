@@ -19,6 +19,13 @@ namespace CodedDataGrouper
 
             public List<RowData> RowDatas { get; private set; }
 
+            public Event()
+            {
+                GroupID = -1;
+                Time = 0.0;
+                RowDatas = new List<RowData>();
+            }
+
             public Event(int behaviorId, double time, RowData initialRow)
             {
                 GroupID = behaviorId;
@@ -38,16 +45,16 @@ namespace CodedDataGrouper
         public int ObvserverCount => _observerIDs.Count;
         private Dictionary<int, string> _observerIDs = new Dictionary<int, string>();
 
-        private Dictionary<int, List<Event>> _events = new Dictionary<int, List<Event>>();
+        private Dictionary<int, SortedDictionary<int, Event>> _events = new Dictionary<int, SortedDictionary<int, Event>>();
 
         public EventList()
         {
 
         }
 
-        private List<Event> GetList(int categoryID)
+        private SortedDictionary<int, Event> GetList(int categoryID)
         {
-            List<Event> list;
+            SortedDictionary<int, Event> list;
 
             if (_events.TryGetValue(categoryID, out list))
             {
@@ -56,7 +63,7 @@ namespace CodedDataGrouper
             }
 
             //new list, one does not exist yet
-            list = new List<Event>();
+            list = new SortedDictionary<int, Event>();
             _events.Add(categoryID, list);
 
             return list;
@@ -100,7 +107,25 @@ namespace CodedDataGrouper
 
             //figure out the threshold based on the behavior type
             double threshold = rd.Category.Threshold;
-            List<Event> events = GetList(rd.CategoryID);
+            SortedDictionary<int, Event> events = GetList(rd.CategoryID);
+
+            //if the row has a valid group ID, then use that instead of finding a group
+            if(rd.GroupIDID >= 0)
+            {
+                //get existing group that this line belongs to
+                if(events.TryGetValue(rd.GroupIDID, out Event? evnt))
+                {
+                    //group exists, add to it
+                    evnt.RowDatas.Add(rd);
+                } else
+                {
+                    //no event, create one
+                    evnt = new Event(rd.GroupID, rd.AverageTime, rd);
+                    events.Add(rd.GroupIDID, evnt);
+                }
+
+                return;
+            }
 
             Event ev;
 
@@ -182,9 +207,12 @@ namespace CodedDataGrouper
                     }
                 }                
             }
-            
+
             //must add to it's own event
-            events.Add(new Event(rd.GroupID, rd.AverageTime, rd));
+
+            //get key for it
+            int groupIDID = events.Keys.Last() + 1;
+            events.Add(groupIDID, new Event(rd.GroupID, rd.AverageTime, rd));
         }
 
         /// <summary>
@@ -198,7 +226,7 @@ namespace CodedDataGrouper
                 return new List<Event>();
             }
 
-            List<List<Event>> events = _events.Values.ToList();
+            List<List<Event>> events = _events.Values.Select(sd => sd.Values.ToList()).ToList();
 
             //sort by categories, if categories are valid
             if(events[0][0].RowDatas[0].CategoryID >= 0)

@@ -8,6 +8,7 @@ namespace CodedDataGrouper
 {
     internal class RowData
     {
+        public int GroupIDID = -1;
         public string ID = "";
         public int IDID = -1;
         public string Group = "";
@@ -25,6 +26,8 @@ namespace CodedDataGrouper
             {
                 switch ((MainForm.Columns)columnIndex)
                 {
+                    case MainForm.Columns.GroupID:
+                        return GroupIDID.ToString();
                     case MainForm.Columns.ID:
                         return ID;
                     case MainForm.Columns.Group:

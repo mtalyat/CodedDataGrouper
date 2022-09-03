@@ -55,7 +55,7 @@ namespace CodedDataGrouper
             //if(!string.IsNullOrEmpty(ColumnID)) count++;
             //if(!string.IsNullOrEmpty(ColumnGroup)) count++;
             //if(!string.IsNullOrEmpty(ColumnCategory)) count++;
-            count += 3 + ColumnsTime.Count;
+            count += 3 + ColumnsTime.Count + 1;//adding 1 for group ID
 
             return count;
         }
@@ -141,7 +141,7 @@ namespace CodedDataGrouper
         public string[] ToStringArray()
         {
             List<string> list = new List<string>(GetColumnCount());
-            list.AddRange(new string[] { ColumnID, ColumnGroup, ColumnCategory });
+            list.AddRange(new string[] { "Group ID", ColumnID, ColumnGroup, ColumnCategory });
             list.AddRange(ColumnsTime);
 
             return list.ToArray();
