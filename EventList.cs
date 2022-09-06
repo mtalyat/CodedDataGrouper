@@ -211,7 +211,7 @@ namespace CodedDataGrouper
             //must add to it's own event
 
             //get key for it
-            int groupIDID = events.Keys.Last() + 1;
+            int groupIDID = events.Keys.Any() ? events.Keys.Last() + 1 : 0;
             events.Add(groupIDID, new Event(rd.GroupID, rd.AverageTime, rd));
         }
 
