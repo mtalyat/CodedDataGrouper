@@ -20,12 +20,14 @@ namespace CodedDataGrouper
         public string ColumnCategory { get; set; } = "";
         public float GlobalThreshold { get; set; } = 0.0f;
         public bool GenerateExcelSheet { get; set; } = true;
+        public bool GenerateEventsSheet { get; set; } = true;
         public bool SearchForPatterns { get; set; } = true;
         public string InterRaterReliability { get; set; } = string.Empty;
         public List<Category> Categories { get; set; } = new List<Category>();
         public List<string> ColumnsTime { get; set; } = new List<string>();
         public List<string> Patterns { get; set; } = new List<string>();
         public List<SuperGroup> SuperGroups { get; set; } = new List<SuperGroup>();
+        public bool ShowExcelWhenDone { get; set; } = true;
 
         [JsonIgnore]
         private Dictionary<int, List<int>> _superGroupIDs = new Dictionary<int, List<int>>();

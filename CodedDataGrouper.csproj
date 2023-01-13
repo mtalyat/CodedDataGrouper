@@ -26,7 +26,7 @@
 
   <ItemGroup>
     <Reference Include="BPAD">
-      <HintPath>..\..\BPAD\BPAD\bin\Debug\net6.0\BPAD.dll</HintPath>
+      <HintPath>..\BPAD\obj\Release\net6.0\BPAD.dll</HintPath>
     </Reference>
   </ItemGroup>
 

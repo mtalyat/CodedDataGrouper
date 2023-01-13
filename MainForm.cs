@@ -7,6 +7,7 @@ using System.Text;
 using System.Diagnostics;
 using Newtonsoft.Json;
 using System.Linq;
+using System.Security.Cryptography;
 
 namespace CodedDataGrouper
 {
@@ -55,12 +56,50 @@ namespace CodedDataGrouper
             _events = new EventList();
         }
 
-        private void AnalyzeData(string filePath, string existingSheet = "")
+        private void AnalyzeDatas(string[] filePaths)
         {
-            if(string.IsNullOrEmpty(filePath))
+            List<ExcelInstance> instances = new List<ExcelInstance>();
+
+            SetOverallProgressTotal(filePaths.Length, 0);
+
+            int finishedCount = 0;
+
+            foreach (string filePath in filePaths)
+            {
+                ExcelInstance? instance = AnalyzeData(filePath);
+
+                if (instance != null)
+                {
+                    instances.Add(instance);
+                }
+
+                ShowOverallProgress(++finishedCount);
+            }
+
+            // show applications, if supposed to
+            // then just release them all
+
+            if (Data.ShowExcelWhenDone)
+            {
+                foreach (ExcelInstance i in instances)
+                {
+                    i.Show();
+                    i.Dispose();
+                }
+            }
+
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            Logger.Log("Finished analyzing all files.");
+        }
+
+        private ExcelInstance? AnalyzeData(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath))
             {
                 Logger.Log("Could not analyzed, no file selected.");
-                return;
+                return null;
             }
 
             lastAnalyzedFilePath = filePath;
@@ -70,32 +109,17 @@ namespace CodedDataGrouper
             Logger.Log($"Analyzing file \"{filePath}\"");
 
             //open excel
-            Microsoft.Office.Interop.Excel.Application application = new Microsoft.Office.Interop.Excel.Application();
-            application.DisplayAlerts = false;
+            ExcelInstance instance = new ExcelInstance(filePath, Data, Logger);
 
-            //get the workbooks
-            Workbooks workbooks = application.Workbooks;
-
-            //open the workbook (file)
-            Workbook workbook = workbooks.Open(filePath);
-
-            //open the sheet we want to use (index starts at 1)
-            Worksheet worksheet;
-           
-            string sheetName = string.IsNullOrEmpty(existingSheet) ? Data.EventsSheetName : existingSheet;
-
-            try
+            if (instance.worksheet == null)
             {
-                worksheet = (Worksheet)workbook.Worksheets[sheetName];
-            }
-            catch
-            {
-                Logger.Log($"Could not find worksheet \"{sheetName}\".");
-                return;
+                instance.Dispose();
+
+                return null;
             }
 
             //get the range of cells that this worksheet contains
-            Microsoft.Office.Interop.Excel.Range rangeAll = worksheet.UsedRange;
+            Microsoft.Office.Interop.Excel.Range rangeAll = instance.worksheet.UsedRange;
             int rangeHeight = rangeAll.Rows.Count;
             int rangeWidth = rangeAll.Columns.Count;
 
@@ -106,33 +130,22 @@ namespace CodedDataGrouper
             GetColumns(rangeAll, rangeWidth, columns);
             _events = ParseEvents(rangeHeight, columns);
 
-            //DEBUG
-            //show counts of each behavior
-            //Dictionary<string, int> behaviors = new Dictionary<string, int>();
-            //foreach (RowData rd in _events.GetRowDatas())
-            //{
-            //    if (!behaviors.TryAdd(rd.Group, 1))
-            //    {
-            //        behaviors[rd.Group]++;
-            //    }
-            //}
-
-            ////sort from largest to smallest to print
-            //Logger.Log($"Behavior counts: {string.Join(",\t", behaviors.OrderByDescending(b => b.Value).Select(pair => $"[{pair.Key}: {pair.Value}]"))}");
-
             if (Data.GenerateExcelSheet)
             {
                 //create sheet with events
-                CreateSheetWithEvents(workbook, _events, columns);
+                if (Data.GenerateEventsSheet)
+                {
+                    CreateSheetWithEvents(instance.workbook, _events, columns);
+                }
 
                 //create shet with IRR
                 switch (Data.InterRaterReliability)
                 {
                     case "Krippendorf's Alpha":
-                        CreateSheetWithInterRaterReliability(workbook, _events, InterRaterReliability.KrippendorfsAlpha);
+                        CreateSheetWithInterRaterReliability(instance.workbook, _events, InterRaterReliability.KrippendorfsAlpha);
                         break;
                     case "Percentage":
-                        CreateSheetWithInterRaterReliability(workbook, _events, InterRaterReliability.RaterPercentage);
+                        CreateSheetWithInterRaterReliability(instance.workbook, _events, InterRaterReliability.RaterPercentage);
                         break;
                         //any other option is considered "none"
                 }
@@ -141,14 +154,10 @@ namespace CodedDataGrouper
                 if (Data.SearchForPatterns)
                 {
                     Pattern[] patterns = CreatePatterns();
-                    CreateSheetWithPatterns(workbook, _events, patterns);
+                    CreateSheetWithPatterns(instance.workbook, _events, patterns);
                 }
 
-                Logger.Log("Showing Excel application result...");
-
-                //show application
-                application.Visible = true;
-                application.DisplayAlerts = true;
+                instance.Save();
             }
             else
             {
@@ -207,15 +216,25 @@ namespace CodedDataGrouper
                 if (columns[i] != null)
                     Marshal.ReleaseComObject(columns[i]);
             }
-            Marshal.ReleaseComObject(worksheet);
-            Marshal.ReleaseComObject(workbook);
-            Marshal.ReleaseComObject(workbooks);
-            Marshal.ReleaseComObject(application);
 
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
+            if (Data.ShowExcelWhenDone)
+            {
+                Logger.Log("Done!");
 
-            Logger.Log("Done!");
+                return instance;
+            }
+            else
+            {
+                Logger.Log("Done!");
+
+                instance.Close();
+                instance.Dispose();
+
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+
+                return null;
+            }
         }
 
         #region Form Events
@@ -271,19 +290,35 @@ namespace CodedDataGrouper
 
             OpenFileDialog ofd = new OpenFileDialog();
 
-            ofd.Title = "Select an Excel file with Boris data.";
-            ofd.Filter = "Excel file (*.xlsx)|*xlsx";
+            ofd.Title = "Select Excel files with Boris data.";
+            ofd.Filter = "Excel files (*.xlsx)|*xlsx";
             ofd.RestoreDirectory = true;
+            ofd.Multiselect = true;
 
             if (ofd.ShowDialog() == DialogResult.OK)
             {
                 //file selected
 
+                // clear old output
+                Logger.Clear();
+
                 //disable button
                 SelectFileButton.Enabled = false;
 
+                // warn about showing excel when over 3 documents (slow down computer)
+                if (ofd.FileNames.Length > 3 && Data.ShowExcelWhenDone)
+                {
+                    if (DialogResult.No == MessageBox.Show("You have selected over 3 Excel documents to analyze, and you have chosen to show the Excel results. This can severely slow down your computer. Would you still like to show the Excel results? (if no, you can still open the files individually after the process has completed.)",
+                        "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2))
+                    {
+                        // user said no, do not show
+                        Data.ShowExcelWhenDone = false;
+                        ShowExcelWhenDoneCheckBox.Checked = false;
+                    }
+                }
+
                 //analyze data
-                AnalyzeData(ofd.FileName);
+                AnalyzeDatas(ofd.FileNames);
 
                 //restore button
                 SelectFileButton.Enabled = true;
@@ -351,6 +386,18 @@ namespace CodedDataGrouper
         private void GenerateExcelSheetCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             Data.GenerateExcelSheet = GenerateExcelSheetCheckBox.Checked;
+
+            // if cannot generate document, cannot create events sheet
+            GenerateEventsSheetCheckBox.Enabled = Data.GenerateExcelSheet;
+            if (!Data.GenerateExcelSheet)
+            {
+                GenerateEventsSheetCheckBox.Checked = false;
+            }
+        }
+
+        private void GenerateEventsSheetCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            Data.GenerateEventsSheet = GenerateEventsSheetCheckBox.Checked;
         }
 
         private void SearchForPatternsCheckBox_CheckedChanged(object sender, EventArgs e)
@@ -379,6 +426,11 @@ namespace CodedDataGrouper
         private void EventsSheetNameTextBox_TextChanged(object sender, EventArgs e)
         {
             Data.EventsSheetName = EventsSheetNameTextBox.Text;
+        }
+
+        private void ShowExcelWhenDoneCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            Data.ShowExcelWhenDone = ShowExcelWhenDoneCheckBox.Checked;
         }
 
         #endregion
@@ -424,6 +476,7 @@ namespace CodedDataGrouper
             GroupColumnTextBox.Text = Data.ColumnGroup;
             GlobalThresholdUpDown.Value = (decimal)Data.GlobalThreshold;
             GenerateExcelSheetCheckBox.Checked = Data.GenerateExcelSheet;
+            GenerateEventsSheetCheckBox.Checked = Data.GenerateEventsSheet;
             SearchForPatternsCheckBox.Checked = Data.SearchForPatterns;
             int irrIndex = InterRaterReliabilityComboBox.Items.IndexOf(Data.InterRaterReliability);
             InterRaterReliabilityComboBox.SelectedIndex = irrIndex == -1 ? 0 : irrIndex;
@@ -432,6 +485,7 @@ namespace CodedDataGrouper
             TimeColumnsRichTextBox.Lines = Data.ColumnsTime.ToArray();
             BpadGroupBox.Enabled = Data.SearchForPatterns;
             BpadPatternsTextBox.Lines = Data.Patterns.ToArray();
+            ShowExcelWhenDoneCheckBox.Checked = Data.ShowExcelWhenDone;
 
             CheckCategoryColumn();
         }
@@ -442,11 +496,22 @@ namespace CodedDataGrouper
 
         private void SetProgressTotal(int total, int startingValue = 0)
         {
+            OutputSubProgressBar.Maximum = total;
+            OutputSubProgressBar.Value = startingValue;
+        }
+
+        private void SetOverallProgressTotal(int total, int startingValue = 0)
+        {
             OutputProgressBar.Maximum = total;
             OutputProgressBar.Value = startingValue;
         }
 
         private void ShowProgress(int progress)
+        {
+            OutputSubProgressBar.Value = Math.Clamp(progress, OutputSubProgressBar.Minimum, OutputSubProgressBar.Maximum);
+        }
+
+        private void ShowOverallProgress(int progress)
         {
             OutputProgressBar.Value = Math.Clamp(progress, OutputProgressBar.Minimum, OutputProgressBar.Maximum);
         }
@@ -697,7 +762,7 @@ namespace CodedDataGrouper
                 ShowProgress(i - 1);
             }
 
-            ShowProgress(rangeHeight - 1);
+            ShowProgress(rangeHeight);
 
             //update super groups
             Data.SetGroupIDs(groupIDs);
@@ -744,8 +809,6 @@ namespace CodedDataGrouper
                 return Array.Empty<int[][]>();
             }
 
-            Logger.Log("Searching for patterns...");
-
             //get names and times
             RowData[] rds = _events.GetRowDatas().ToArray();
             string[] names = rds.Select(e => e.Group).ToArray();
@@ -760,6 +823,8 @@ namespace CodedDataGrouper
 
             for (int i = 0; i < patterns.Length; i++)
             {
+                Logger.Log($"Searching patterns for pattern \"{patterns[i]}\"");
+
                 outputs.Add(patterns[i].Evaluate(names, times));
 
                 ShowProgress(i + 1);
@@ -789,6 +854,7 @@ namespace CodedDataGrouper
                     catch
                     {
                         //keep going
+                        attempts++;
                     }
                 } while (!named);
             }
@@ -814,7 +880,7 @@ namespace CodedDataGrouper
 
             try
             {
-                worksheet = (Worksheet)workbook.Worksheets[Data.EventsSheetName];
+                worksheet = (Worksheet)workbook.Worksheets[name];
             }
             catch
             {
@@ -893,7 +959,7 @@ namespace CodedDataGrouper
                         tempCell = sheet.Cells[row + r + 1, c + 1];
                         dynamic value = rd[c];
 
-                        if(c == (int)Columns.GroupID && value == "-1")
+                        if (c == (int)Columns.GroupID && value == "-1")
                         {
                             value = groupID;
                         }
@@ -949,7 +1015,7 @@ namespace CodedDataGrouper
 
             Logger.Log("Creating patterns sheet...");
 
-            Worksheet sheet = CreateSheet(workbook, "Patterns");
+            Worksheet sheet = GetSheet(workbook, "Patterns");
 
             List<RowData> rowDatas = events.GetRowDatas();
 
@@ -961,9 +1027,15 @@ namespace CodedDataGrouper
             for (int i = 0; i < identifiedPatterns.Length; i++)
             {
                 //write pattern name
-                cell = sheet.Cells[row++, 1];
+                cell = sheet.Cells[row, 1];
                 cell.Value = patterns[i].Name;
                 cell.Font.Bold = true;
+
+                // write pattern count
+                cell = sheet.Cells[row, 2];
+                cell.Value = identifiedPatterns[i].Length;
+
+                row++;
 
                 int[][] identifiedPatternsData = identifiedPatterns[i];
 
@@ -978,10 +1050,17 @@ namespace CodedDataGrouper
                         rd = rowDatas[identifiedPatternsEvents[k]];
 
                         //individual row data values
-                        for (int l = 0; l < rd.ColumnCount; l++)
+                        for (int l = 0, lcol = 0; l < rd.ColumnCount; l++, lcol++)
                         {
-                            cell = sheet.Cells[row, 2 + l];
-                            cell.Value = rd[l];
+                            if (rd[l] == "-1")
+                            {
+                                lcol--;
+                            }
+                            else
+                            {
+                                cell = sheet.Cells[row, 2 + lcol];
+                                cell.Value = rd[l];
+                            }
                         }
 
                         //move to next row
@@ -993,8 +1072,13 @@ namespace CodedDataGrouper
                 }
             }
 
+            // autofit first column
+            cell = sheet.Columns[1];
+            cell.AutoFit();
+
             //print out the patterns in a organized list, basically
 
+            Marshal.ReleaseComObject(cell);
             Marshal.ReleaseComObject(sheet);
         }
 
